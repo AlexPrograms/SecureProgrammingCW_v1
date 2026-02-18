@@ -1,0 +1,38 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/*.tsbuildinfo
+frontend/.env.local
+frontend/.env.*.local
+
+# Backend API
+backend/api/.venv/
+backend/api/.env
+backend/api/.pytest_cache/
+backend/api/.hypothesis/
+backend/api/.mypy_cache/
+backend/api/.ruff_cache/
+backend/api/htmlcov/
+backend/api/.coverage
+backend/api/.coverage.*
+backend/api/**/*.pyc
+backend/api/**/__pycache__/
+
+# Local database/runtime data
+backend/api/data/*
+!backend/api/data/.gitkeep
