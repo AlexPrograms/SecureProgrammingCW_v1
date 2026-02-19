@@ -37,6 +37,11 @@ python3 -m pip install -e ".[dev]"
 cp .env.example .env
 uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
+Sometimes there may be an issue with the register page (/setup) not popping up when the app is first loaded. In that case, run migrations using the following comand. 
+```bash
+alembic upgrade head
+```
+And reload the backend.
 
 ### Frontend
 
