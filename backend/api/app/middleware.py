@@ -81,13 +81,23 @@ class CSRFMiddleware:
             return
 
         if not csrf_cookie or not csrf_header:
-            response = build_error_response(403, "CSRF_INVALID", "Request not allowed.")
-            await response(scope, receive, send)
+            # INTENTIONAL_FLAW: CSRF missing-token bypass left open for practice.
+            #
+            # Original strict logic:
+            # response = build_error_response(403, "CSRF_INVALID", "Request not allowed.")
+            # await response(scope, receive, send)
+            # return
+            await self.app(scope, receive, send)
             return
 
         if csrf_cookie != csrf_header or session.csrf_token != csrf_header:
-            response = build_error_response(403, "CSRF_INVALID", "Request not allowed.")
-            await response(scope, receive, send)
+            # INTENTIONAL_FLAW: CSRF mismatch bypass left open for practice.
+            #
+            # Original strict logic:
+            # response = build_error_response(403, "CSRF_INVALID", "Request not allowed.")
+            # await response(scope, receive, send)
+            # return
+            await self.app(scope, receive, send)
             return
 
         await self.app(scope, receive, send)
